@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #fa0100;
+            --secondary-color: #333;
+            --background-color: #f9f9f9;
+            --border-color: #ddd;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 250px;
+            margin-right: 15px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .button-group {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #d10000;
+        }
+
+        button.secondary {
+            background-color: var(--secondary-color);
+        }
+
+        button.secondary:hover {
+            background-color: #222;
+        }
+
+        .preview-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f3f3f3;
+            border-radius: 8px;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #certificatePreview {
+            width: 100%;
+            height: auto;
+            position: relative;
+            background-color: white;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        #certificate {
+            width: 1056px; /* A4 landscape size at 96 DPI */
+            height: 816px;
+            position: relative;
+            background-color: white;
+            margin: 0 auto;
+            border: 5px solid var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* HEADER SECTION - UPDATED */
+        .certificate-header {
+            width: calc(100% - 40px); /* Account for padding */
+            height: 120px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .logo-container {
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2; /* Ensure logo stays above corner decorations */
+            margin-left: 40px; /* Add space from left edge */
+        }
+
+        #companyLogo {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .certificate-number {
+            font-size: 16px;
+            color: var(--secondary-color);
+            font-weight: bold;
+            text-align: right;
+            position: relative;
+            z-index: 2; /* Ensure number stays above corner decorations */
+            margin-right: 20px; /* Add space from right edge */
+            max-width: 200px; /* Prevent text from overflowing */
+            word-break: break-word; /* Handle long certificate numbers */
+        }
+
+        /* CONTENT SECTION - UPDATED */
+        .certificate-main {           
+            width: calc(100% - 80px); /* Account for padding */
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 40px;
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .certificate-title {
+            text-align: center;
+            margin: 0; 
+            padding: 0;
+        }
+
+        .certificate-title h2 {
+
+            margin: 0; 
+            padding: 0;
+            font-size: 32px;
+            line-height: 1.2;
+            color: var(--primary-color);
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .certificate-title h3 {
+            font-size: 24px;
+            margin: 10px 0;
+            font-weight: normal;
+        }
+
+        .certificate-content {
+            text-align: center;
+            margin-top: 5px;
+            width: 100%;
+            margin: 20px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .candidate-name {
+            font-family: 'Dancing Script', cursive;
+            font-size: 46px;
+            color: var(--secondary-color);
+            font-weight: bold;
+            margin: 20px 0;
+            line-height: 1.2;
+            word-break: break-word; /* Handle long names */
+        }
+
+        .certificate-text {
+            font-size: 18px;
+            line-height: 1.8;
+            margin: 4px 0;
+        }
+
+        #displayCourseName {
+            font-family: 'Georgia', serif;
+            font-weight: bold;
+            font-size: 26px;
+        }
+
+        /* FOOTER SECTION - UPDATED */
+        .certificate-footer {
+            width: calc(100% - 80px); /* Account for padding */
+            height: 200px;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 40px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .signature-section, .date-section, .qr-section {
+            text-align: center;
+            width: 30%; /* Adjusted for better spacing */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 20px;
+        }
+
+        .signature {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 30px;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            min-height: 40px;
+        }
+
+        .signature-title {
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .date-section #displayIssuedDate {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .date-section div:last-child {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .qr-section {
+            width: 33%;
+        }
+
+        #qrCode {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+
+        .verification-text {
+            font-size: 12px;
+            margin-top: 5px;
+            font-weight: bold;
+            word-break: break-all; /* Handle long URLs */
+            max-width: 100%;
+        }
+
+        /* CORNER DECORATIONS - UPDATED */
+        .corner-decoration {
+            position: absolute;
+            z-index: 1;
+            width: 100px;
+            height: 100px;
+            pointer-events: none;
+        }
+
+        .top-left {
+            top: 15px;
+            left: 15px;
+        }
+
+        .top-right {
+            top: 15px;
+            right: 15px;
+        }
+
+        .bottom-left {
+            bottom: 15px;
+            left: 15px;
+        }
+
+        .bottom-right {
+            bottom: 15px;
+            right: 15px;
+        }
+
+        .certificate-inner {
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .certificate-border {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 1px solid #0a0a0a;
+            margin: 10px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .line-separator {
+
+            margin: 4px auto 8px auto;
+            width: 60%;
+            height: 2px;
+            background-color: var(--secondary-color);
+            margin: 10px auto;
+        }
+
+        .records {
+            margin-top: 30px;
+        }
+
+        .records h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .records-table th, .records-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .records-table th {
+            background-color: #f5f5f5;
+            color: var(--secondary-color);
+        }
+
+        .password-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .password-box {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .password-box h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .bold-date {
+            font-weight: bold;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .doubleline-separator {
+            border: none;
+            height: 2px;
+            background: linear-gradient(to right, #fa0100, #000);
+            margin: 10px 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #certificate, #certificate * {
+                visibility: visible;
+            }
+            #certificate {
+                width: 100%;
+                height: auto;
+                position: absolute;
+                left: 0;
+                top: 0;
+                margin: 0;
+                padding: 0;
+                border: none;
+            }
+        }
+
+        @media (max-width: 1100px) {
+            #certificate {
+                transform: scale(0.8);
+                transform-origin: top center;
+            }
+        }
+
+        @media (max-width: 900px) {
+            #certificate {
+                transform: scale(0.6);
+            }
+        }
+
+        @media (max-width: 700px) {
+            #certificate {
+                transform: scale(0.5);
+            }
+        }
+
+        @font-face {
+            font-family: 'Pacifico';
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff2') format('woff2');
+            font-style: normal;
+            font-weight: 400;
+        }
+    </style>
+</head>
+<body>
+    <div class="password-container" id="passwordContainer">
+        <div class="password-box">
+            <h2>Administrator Access</h2>
+            <p>Enter the password to access the Certificate Generator:</p>
+            <input type="password" class="password-input" id="accessPassword" placeholder="Enter password">
+            <button onclick="checkPassword()">Login</button>
+        </div>
+    </div>
+
+    <div class="container hidden" id="mainContainer">
+        <h1>Certificate Generator</h1>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="candidateName">Candidate Name:</label>
+                <input type="text" id="candidateName" placeholder="Enter candidate's full name">
+            </div>
+            <div class="form-group">
+                <label for="courseName">Course Name:</label>
+                <input type="text" id="courseName" placeholder="Enter course name">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="fromDate">From Date:</label>
+                <input type="date" id="fromDate">
+            </div>
+            <div class="form-group">
+                <label for="issuedDate">Issued Date:</label>
+                <input type="date" id="issuedDate">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="certificateNumber">Certificate Number:</label>
+                <input type="text" id="certificateNumber" placeholder="Enter certificate number">
+            </div>
+            <div class="form-group">
+                <label for="programDirector">Program Director Name:</label>
+                <input type="text" id="programDirector" placeholder="Enter program director's name">
+            </div>
+        </div>
+        
+        <!-- Logo Controls - NEW SECTION -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="logoUrl">Logo URL:</label>
+                <input type="text" id="logoUrl" placeholder="Enter logo URL" value="/logo.png">
+            </div>
+            <div class="form-group">
+                <label for="logoSize">Logo Size (px):</label>
+                <input type="number" id="logoSize" placeholder="Logo size in pixels" value="120" min="50" max="200">
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button onclick="generateCertificate()">Generate Certificate</button>
+            <button class="secondary" onclick="downloadCertificate()" id="downloadBtn" disabled>Download Certificate</button>
+        </div>
+        
+        <div class="preview-container">
+            <div class="controls">
+                <h2>Certificate Preview</h2>
+            </div>
+            <div id="certificatePreview">
+                <div id="certificate">
+                    <!-- Minimalistic corner decorations -->
+                    <svg class="corner-decoration top-left" viewBox="0 0 100 100">
+                        <path d="M0,0 L80,0 C80,0 70,20 40,20 C10,20 0,80 0,80 L0,0 Z" fill="#fa0100" fill-opacity="0.2"/>
+                        <path d="M0,0 L50,0 C50,0 45,10 25,10 C5,10 0,50 0,50 L0,0 Z" fill="#fa0100"/>
+                    </svg>
+                    <svg class="corner-decoration top-right" viewBox="0 0 100 100">
+                        <path d="M100,0 L20,0 C20,0 30,20 60,20 C90,20 100,80 100,80 L100,0 Z" fill="#fa0100" fill-opacity="0.2"/>
+                        <path d="M100,0 L50,0 C50,0 55,10 75,10 C95,10 100,50 100,50 L100,0 Z" fill="#fa0100"/>
+                    </svg>
+                    <svg class="corner-decoration bottom-left" viewBox="0 0 100 100">
+                        <path d="M0,100 L80,100 C80,100 70,80 40,80 C10,80 0,20 0,20 L0,100 Z" fill="#fa0100" fill-opacity="0.2"/>
+                        <path d="M0,100 L50,100 C50,100 45,90 25,90 C5,90 0,50 0,50 L0,100 Z" fill="#fa0100"/>
+                    </svg>
+                    <svg class="corner-decoration bottom-right" viewBox="0 0 100 100">
+                        <path d="M100,100 L20,100 C20,100 30,80 60,80 C90,80 100,20 100,20 L100,100 Z" fill="#fa0100" fill-opacity="0.2"/>
+                        <path d="M100,100 L50,100 C50,100 55,90 75,90 C95,90 100,50 100,50 L100,100 Z" fill="#fa0100"/>
+                    </svg>
+                    
+                    <div class="certificate-inner">
+                        <!-- Header Block -->
+                        <div class="certificate-header">
+                            <div class="logo-container" id="logoContainer">
+                                <img id="companyLogo" src="/logo.png" alt="Company Logo">
+                            </div>
+                            <div class="certificate-number" id="displayCertificateNumber">CERT-2025-001</div>
+                        </div>
+                        
+                        <!-- Main Content -->
+                        <div class="certificate-main">
+                            <div class="certificate-title">
+                                <div class="doubleline-separator"></div>
+                                <h2>Certificate of Completion</h2>
+                                <div class="doubleline-separator"></div>
+                            </div>
+                            
+                            <div class="certificate-content">
+                                <div class="certificate-text">This is to proudly certify that</div>
+                                <div class="candidate-name" id="displayCandidateName">John Doe</div>
+                                <div class="certificate-text">
+                                    has successfully completed the course on<br>
+                                    <strong id="displayCourseName">Advanced Web Development</strong><br>
+                                    offered by <b style="font-family: 'Roboto Slab', serif; font-size: 1.2em;">NetSwing Technologies</b> 
+                                    The course was conducted from <span class="bold-date" id="displayFromDate"><strong>January 1, 2025</strong></span> to <span class="bold-date" id="displayToDate"><strong>April 17, 2025</strong></span>,
+                                    including practical assignments and evaluations.
+                                    The candidate has demonstrated satisfactory performance and met all the criteria for course completion.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer Block -->
+                        <div class="certificate-footer">
+                            <div class="signature-section">
+                                <div class="signature" id="displaySignature">Jane Smith</div>
+                                <div class="line-separator"></div>
+                                <div class="signature-title">Program Director</div>
+                            </div>
+                            
+                            <div class="date-section">
+                                <div id="displayIssuedDate">April 17, 2025</div>
+                                <div class="line-separator"></div>
+                                <div class="signature-title">Issued on</div>
+                            </div>
+                            
+                            <div class="qr-section">
+                                <div id="qrCode"></div>
+                                <div class="verification-text">Scan to verify</div>
+                                <div class="line-separator"></div>
+                                <div class="verification-text" id="verificationUrl">https://netswing.in/cert/viewer.html?code=abc123</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Subtle inner border -->
+                    <div class="certificate-border"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="records">
+            <h2>Certificate Records</h2>
+            <table class="records-table" id="recordsTable">
+                <thead>
+                    <tr>
+                        <th>Candidate Name</th>
+                        <th>Course Name</th>
+                        <th>From Date</th>
+                        <th>Issued Date</th>
+                        <th>Certificate Number</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsBody">
+                    <!-- Records will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Password protection
+        const ADMIN_PASSWORD = "admin123"; // Change this to a secure password in production
+        
+        function checkPassword() {
+            const passwordInput = document.getElementById('accessPassword').value;
+            if (passwordInput === ADMIN_PASSWORD) {
+                document.getElementById('passwordContainer').classList.add('hidden');
+                document.getElementById('mainContainer').classList.remove('hidden');
+                loadCertificateRecords();
+                updateLogo(); // Initialize logo with default values
+            } else {
+                alert('Incorrect password. Please try again.');
+            }
+        }
+        
+        // Initialize variables
+        let certificates = [];
+        let currentCertificateData = null;
+        
+        // Function to generate base64 string from candidate name and issued date
+        function generateBase64Code(name, date) {
+            const data = `${name}_${date}.png`;
+            // Basic base64 encoding
+            return btoa(data);
+        }
+        
+        // Function to update logo size and URL
+        function updateLogo() {
+            const logoUrl = document.getElementById('logoUrl').value;
+            const logoSize = document.getElementById('logoSize').value;
+            
+            const logoContainer = document.getElementById('logoContainer');
+            const companyLogo = document.getElementById('companyLogo');
+            
+            // Update logo container size
+            logoContainer.style.width = `${logoSize}px`;
+            logoContainer.style.height = `${logoSize}px`;
+            
+            // Update logo image
+            companyLogo.src = logoUrl;
+            companyLogo.style.maxWidth = `${logoSize}px`;
+            companyLogo.style.maxHeight = `${logoSize}px`;
+        }
+        
+        // Function to generate certificate
+        function generateCertificate() {
+            // Get values from form
+            const candidateName = document.getElementById('candidateName').value;
+            const courseName = document.getElementById('courseName').value;
+            const fromDate = document.getElementById('fromDate').value;
+            const issuedDate = document.getElementById('issuedDate').value;
+            const certificateNumber = document.getElementById('certificateNumber').value;
+            const programDirector = document.getElementById('programDirector').value;
+            
+            // Validate inputs
+            if (!candidateName || !courseName || !fromDate || !issuedDate || !certificateNumber || !programDirector) {
+                alert('Please fill in all fields.');
+                return;
+            }
+            
+            // Update logo based on user input
+            updateLogo();
+            
+            // Format the dates
+            const fromDateObj = new Date(fromDate);
+            const formattedFromDate = fromDateObj.toLocaleDateString('en-US', { 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            
+            const issuedDateObj = new Date(issuedDate);
+            const formattedIssuedDate = issuedDateObj.toLocaleDateString('en-US', { 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+
+            // Generate QR code and verification URL
+
+            const sanitizedCandidateName = candidateName.trim().replace(/\s+/g, '_');
+            const sanitizedIssuedDate = formattedIssuedDate.trim().replace(/\s+/g, '_');
+            const base64Code = generateBase64Code(sanitizedCandidateName, sanitizedIssuedDate);
+
+            // const base64Code = generateBase64Code(candidateName, issuedDate);
+            const verificationUrl = `https://netswing.in/cert/viewer.html?code=${base64Code}`;
+            
+            // Update certificate display
+            document.getElementById('displayCandidateName').textContent = candidateName;
+            document.getElementById('displayCourseName').textContent = courseName;
+            document.getElementById('displayFromDate').textContent = formattedFromDate;
+            document.getElementById('displayToDate').textContent = formattedIssuedDate;
+            document.getElementById('displayIssuedDate').textContent = formattedIssuedDate;
+            document.getElementById('displayCertificateNumber').textContent = certificateNumber;
+            document.getElementById('displaySignature').textContent = programDirector;
+            document.getElementById('verificationUrl').textContent = verificationUrl;
+            
+            // Generate QR code
+            const qrCodeContainer = document.getElementById('qrCode');
+            qrCodeContainer.innerHTML = '';
+            new QRCode(qrCodeContainer, {
+                text: verificationUrl,
+                width: 110,
+                height: 110,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            // Store current certificate data
+            currentCertificateData = {
+                candidateName,
+                courseName,
+                fromDate: formattedFromDate,
+                issuedDate: formattedIssuedDate,
+                certificateNumber,
+                programDirector,
+                verificationUrl,
+                timestamp: new Date().toISOString(),
+                base64Code,
+                logoUrl: document.getElementById('logoUrl').value,
+                logoSize: document.getElementById('logoSize').value
+            };
+            
+            // Enable download button
+            document.getElementById('downloadBtn').disabled = false;
+            
+            // Save certificate record
+            saveCertificateRecord(currentCertificateData);
+        }
+        
+        function downloadCertificate() {
+            if (!currentCertificateData) {
+                alert('Please generate a certificate first.');
+                return;
+            }
+            
+            const certificate = document.getElementById('certificate');
+            
+            // Ensure right border is visible by forcing a reflow
+            certificate.style.borderRight = '5px solid var(--primary-color)';
+            
+            html2canvas(certificate, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                height: certificate.offsetHeight,
+                windowHeight: certificate.offsetHeight + 50,
+                logging: true,
+                onclone: function(clonedDoc) {
+                    // Ensure borders are visible in the cloned document
+                    const clonedCert = clonedDoc.getElementById('certificate');
+                    if (clonedCert) {
+                        clonedCert.style.border = '5px solid var(--primary-color)';
+                    }
+                }
+            }).then(canvas => {
+                // Create a download link for the image
+                const link = document.createElement('a');
+                // Use certificate number for filename if available, otherwise use base64
+
+                const candidateName = currentCertificateData.candidateName.replace(/[^a-zA-Z0-9]/g, '_');
+                const issuedDate = currentCertificateData.issuedDate.replace(/[^a-zA-Z0-9]/g, '_');
+                const fileName = `${candidateName}_${issuedDate}`;
+                link.download = `${fileName}.png`;
+
+                // const fileName = currentCertificateData.certificateNumber 
+                //     ? currentCertificateData.certificateNumber.replace(/[^a-zA-Z0-9]/g, '_')
+                //     : currentCertificateData.base64Code;
+                // link.download = `Certificate_${fileName}.png`;
+
+
+
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(err => {
+                console.error('Error generating certificate:', err);
+                alert('Error generating certificate. Please try again.');
+            });
+        }
+        
+        // Function to save certificate record
+        function saveCertificateRecord(certificateData) {
+            // Load existing certificates from localStorage
+            const existingCertificates = localStorage.getItem('certificates');
+            certificates = existingCertificates ? JSON.parse(existingCertificates) : [];
+            
+            // Add new certificate
+            certificates.push(certificateData);
+            
+            // Save to localStorage
+            localStorage.setItem('certificates', JSON.stringify(certificates));
+            
+            // Update the records table
+            updateRecordsTable();
+        }
+        
+        // Function to load certificate records
+        function loadCertificateRecords() {
+            const existingCertificates = localStorage.getItem('certificates');
+            certificates = existingCertificates ? JSON.parse(existingCertificates) : [];
+            updateRecordsTable();
+        }
+        
+        // Function to update records table
+        function updateRecordsTable() {
+            const recordsBody = document.getElementById('recordsBody');
+            recordsBody.innerHTML = '';
+            
+            certificates.forEach((cert, index) => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${cert.candidateName}</td>
+                    <td>${cert.courseName}</td>
+                    <td>${cert.fromDate}</td>
+                    <td>${cert.issuedDate}</td>
+                    <td>${cert.certificateNumber}</td>
+                    <td>
+                        <button onclick="viewCertificate(${index})">View</button>
+                        <button onclick="deleteCertificate(${index})">Delete</button>
+                    </td>
+                `;
+                
+                recordsBody.appendChild(row);
+            });
+        }
+        
+        // Function to view a saved certificate
+        function viewCertificate(index) {
+            const cert = certificates[index];
+            
+            // Update form fields
+            document.getElementById('candidateName').value = cert.candidateName;
+            document.getElementById('courseName').value = cert.courseName;
+            
+            // Handle fromDate
+            if (cert.fromDate) {
+                // Convert formatted date back to ISO format for the input
+                const fromDateComponents = cert.fromDate.split(' ');
+                const fromMonth = new Date(`${fromDateComponents[0]} 1, 2000`).getMonth() + 1;
+                const fromDay = fromDateComponents[1].replace(',', '');
+                const fromYear = fromDateComponents[2];
+                const fromIsoDate = `${fromYear}-${fromMonth.toString().padStart(2, '0')}-${fromDay.toString().padStart(2, '0')}`;
+                document.getElementById('fromDate').value = fromIsoDate;
+            }
+            
+            // Handle issuedDate
+            if (cert.issuedDate) {
+                // Convert formatted date back to ISO format for the input
+                const issuedDateComponents = cert.issuedDate.split(' ');
+                const issuedMonth = new Date(`${issuedDateComponents[0]} 1, 2000`).getMonth() + 1;
+                const issuedDay = issuedDateComponents[1].replace(',', '');
+                const issuedYear = issuedDateComponents[2];
+                const issuedIsoDate = `${issuedYear}-${issuedMonth.toString().padStart(2, '0')}-${issuedDay.toString().padStart(2, '0')}`;
+                document.getElementById('issuedDate').value = issuedIsoDate;
+            }
+            
+            document.getElementById('certificateNumber').value = cert.certificateNumber;
+            document.getElementById('programDirector').value = cert.programDirector || cert.technicalHead;
+            
+            // Update logo settings if they exist
+            if (cert.logoUrl) {
+                document.getElementById('logoUrl').value = cert.logoUrl;
+            }
+            if (cert.logoSize) {
+                document.getElementById('logoSize').value = cert.logoSize;
+            }
+            
+            // Update certificate preview MANUALLY instead of calling generateCertificate()
+            // Display certificate data without saving a new record
+            document.getElementById('displayCandidateName').textContent = cert.candidateName;
+            document.getElementById('displayCourseName').textContent = cert.courseName;
+            document.getElementById('displayFromDate').textContent = cert.fromDate;
+            document.getElementById('displayToDate').textContent = cert.issuedDate;
+            document.getElementById('displayIssuedDate').textContent = cert.issuedDate;
+            document.getElementById('displayCertificateNumber').textContent = cert.certificateNumber;
+            document.getElementById('displaySignature').textContent = cert.programDirector || cert.technicalHead;
+            document.getElementById('verificationUrl').textContent = cert.verificationUrl;
+            
+            // Update logo
+            updateLogo();
+            
+            // Generate QR code
+            const qrCodeContainer = document.getElementById('qrCode');
+            qrCodeContainer.innerHTML = '';
+            new QRCode(qrCodeContainer, {
+                text: cert.verificationUrl,
+                width: 110,
+                height: 110,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            // Set current certificate data
+            currentCertificateData = cert;
+            
+            // Enable download button
+            document.getElementById('downloadBtn').disabled = false;
+        }
+        
+        // Function to delete a certificate
+        function deleteCertificate(index) {
+            if (confirm('Are you sure you want to delete this certificate record?')) {
+                certificates.splice(index, 1);
+                localStorage.setItem('certificates', JSON.stringify(certificates));
+                updateRecordsTable();
+            }
+        }
+
+        // Handle image error (if logo is not found)
+        document.getElementById('companyLogo').onerror = function() {
+            this.src = 'https://via.placeholder.com/120';
+            console.log('Company logo not found. Using placeholder image.');
+        };
+
+        // Initialize the certificate preview with some default values
+        window.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            document.getElementById('issuedDate').value = today.toISOString().split('T')[0];
+            // Set from date default to 30 days before today
+            const fromDay = new Date();
+            fromDay.setDate(fromDay.getDate() - 30);
+            document.getElementById('fromDate').value = fromDay.toISOString().split('T')[0];
+            
+            // Add event listeners for logo controls
+            document.getElementById('logoUrl').addEventListener('change', updateLogo);
+            document.getElementById('logoSize').addEventListener('change', updateLogo);
+        });
+    </script>
+</body>
+</html>
