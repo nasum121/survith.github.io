@@ -147,8 +147,7 @@
         }
 
         .logo-container {
-            flex: 0 0 140px;
-            /* width: 100px; */
+            width: 120px;
             height: 120px;
             display: flex;
             align-items: center;
@@ -164,24 +163,8 @@
             object-fit: contain;
         }
 
-        .extra-logos {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px; /* gap between logos */
-            flex-wrap: nowrap;
-        }
-
-        .extra-logo {
-            height: 80px;
-            width: auto;
-            object-fit: contain;
-        }
-
         .certificate-number {
-            flex: 0 0 140px;
-            font-size: 11px;
+            font-size: 16px;
             color: var(--secondary-color);
             font-weight: bold;
             text-align: right;
@@ -203,29 +186,6 @@
             padding: 0 40px;
             margin: 20px 0;
             overflow: hidden;
-            position: relative;
-            z-index: 1;
-        }
-
-
-        .certificate-main::before {
-            content: '';
-            position: absolute;
-            top: 65%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 79%;
-            height: 40%;
-            background-image: url('logo.png');
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-size: contain;
-            opacity: 0.03;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .certificate-main > * {
             position: relative;
             z-index: 1;
         }
@@ -284,7 +244,6 @@
             font-size: 26px;
         }
 
-
         /* FOOTER SECTION - UPDATED */
         .certificate-footer {
             width: calc(100% - 80px); /* Account for padding */
@@ -294,8 +253,7 @@
             padding: 20px 40px;
             margin: 0 auto;
             position: relative;
-        } 
-
+        }
 
         .signature-section, .date-section, .qr-section {
             text-align: center;
@@ -625,13 +583,6 @@
                             <div class="logo-container" id="logoContainer">
                                 <img id="companyLogo" src="/logo.png" alt="Company Logo">
                             </div>
-                                <!-- New: Extra Logos Section -->
-                            <div class="extra-logos">
-                                <img src="./msme.png" alt="Logo 1" class="extra-logo">
-                                <img src="./aicte.png" alt="Logo 2" class="extra-logo">
-                                <img src="./mca.png" alt="Logo 3" class="extra-logo">
-                                <img src="./iso.png" alt="Logo 3" class="extra-logo">
-                            </div>
                             <div class="certificate-number" id="displayCertificateNumber">CERT-2025-001</div>
                         </div>
                         
@@ -649,7 +600,7 @@
                                 <div class="certificate-text">
                                     has successfully completed the course on<br>
                                     <strong id="displayCourseName">Advanced Web Development</strong><br>
-                                    offered by <b style="font-family: 'Roboto Slab', serif; font-size: 1.2em;">NetSwing Technologies</b>. 
+                                    offered by <b style="font-family: 'Roboto Slab', serif; font-size: 1.2em;">NetSwing Technologies</b> 
                                     The course was conducted from <span class="bold-date" id="displayFromDate"><strong>January 1, 2025</strong></span> to <span class="bold-date" id="displayToDate"><strong>April 17, 2025</strong></span>,
                                     including practical assignments and evaluations.
                                     The candidate has demonstrated satisfactory performance and met all the criteria for course completion.
@@ -675,7 +626,7 @@
                                 <div id="qrCode"></div>
                                 <div class="verification-text">Scan to verify</div>
                                 <div class="line-separator"></div>
-                                <div class="verification-text" id="verificationUrl">https://netswing.in/cert/verify.html?code=abc123</div>
+                                <div class="verification-text" id="verificationUrl">https://netswing.in/cert/viewer.html?code=abc123</div>
                             </div>
                         </div>
                     </div>
@@ -788,15 +739,8 @@
             // Generate QR code and verification URL
 
             const sanitizedCandidateName = candidateName.trim().replace(/\s+/g, '_');
-            //const sanitizedIssuedDate = formattedIssuedDate.trim().replace(/\s+/g, '_');
-
-            const sanitizedIssuedDate = formattedIssuedDate
-                .replace(/,/g, '') // Remove commas first
-                .trim()
-                .replace(/\s+/g, '_');
+            const sanitizedIssuedDate = formattedIssuedDate.trim().replace(/\s+/g, '_');
             const base64Code = generateBase64Code(sanitizedCandidateName, sanitizedIssuedDate);
-            // alert(sanitizedCandidateName);
-            // alert(sanitizedIssuedDate);
 
             // const base64Code = generateBase64Code(candidateName, issuedDate);
             const verificationUrl = `https://netswing.in/cert/viewer.html?code=${base64Code}`;
@@ -857,7 +801,7 @@
             certificate.style.borderRight = '5px solid var(--primary-color)';
             
             html2canvas(certificate, {
-                scale: 6,
+                scale: 2,
                 useCORS: true,
                 allowTaint: true,
                 height: certificate.offsetHeight,
@@ -874,11 +818,9 @@
                 // Create a download link for the image
                 const link = document.createElement('a');
                 // Use certificate number for filename if available, otherwise use base64
+
                 const candidateName = currentCertificateData.candidateName.replace(/[^a-zA-Z0-9]/g, '_');
-
-                // removing the , character from the issued date from the string and then replace it with _ to match the base64 encoded string decoded match.
-                const issuedDate = currentCertificateData.issuedDate.replace(/,/g, '').replace(/ /g, '_');
-
+                const issuedDate = currentCertificateData.issuedDate.replace(/[^a-zA-Z0-9]/g, '_');
                 const fileName = `${candidateName}_${issuedDate}`;
                 link.download = `${fileName}.png`;
 
