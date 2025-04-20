@@ -147,7 +147,8 @@
         }
 
         .logo-container {
-            width: 120px;
+            flex: 0 0 140px;
+            /* width: 100px; */
             height: 120px;
             display: flex;
             align-items: center;
@@ -163,8 +164,24 @@
             object-fit: contain;
         }
 
+        .extra-logos {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px; /* gap between logos */
+            flex-wrap: nowrap;
+        }
+
+        .extra-logo {
+            height: 80px;
+            width: auto;
+            object-fit: contain;
+        }
+
         .certificate-number {
-            font-size: 16px;
+            flex: 0 0 140px;
+            font-size: 11px;
             color: var(--secondary-color);
             font-weight: bold;
             text-align: right;
@@ -583,6 +600,13 @@
                             <div class="logo-container" id="logoContainer">
                                 <img id="companyLogo" src="/logo.png" alt="Company Logo">
                             </div>
+                                <!-- New: Extra Logos Section -->
+                            <div class="extra-logos">
+                                <img src="./msme.png" alt="Logo 1" class="extra-logo">
+                                <img src="./aicte.png" alt="Logo 2" class="extra-logo">
+                                <img src="./mca.png" alt="Logo 3" class="extra-logo">
+                                <img src="./iso.png" alt="Logo 3" class="extra-logo">
+                            </div>
                             <div class="certificate-number" id="displayCertificateNumber">CERT-2025-001</div>
                         </div>
                         
@@ -600,7 +624,7 @@
                                 <div class="certificate-text">
                                     has successfully completed the course on<br>
                                     <strong id="displayCourseName">Advanced Web Development</strong><br>
-                                    offered by <b style="font-family: 'Roboto Slab', serif; font-size: 1.2em;">NetSwing Technologies</b> 
+                                    offered by <b style="font-family: 'Roboto Slab', serif; font-size: 1.2em;">NetSwing Technologies</b>. 
                                     The course was conducted from <span class="bold-date" id="displayFromDate"><strong>January 1, 2025</strong></span> to <span class="bold-date" id="displayToDate"><strong>April 17, 2025</strong></span>,
                                     including practical assignments and evaluations.
                                     The candidate has demonstrated satisfactory performance and met all the criteria for course completion.
@@ -808,7 +832,7 @@
             certificate.style.borderRight = '5px solid var(--primary-color)';
             
             html2canvas(certificate, {
-                scale: 2,
+                scale: 6,
                 useCORS: true,
                 allowTaint: true,
                 height: certificate.offsetHeight,
@@ -830,8 +854,6 @@
                 // removing the , character from the issued date from the string and then replace it with _ to match the base64 encoded string decoded match.
                 const issuedDate = currentCertificateData.issuedDate.replace(/,/g, '').replace(/ /g, '_');
 
-                alert(currentCertificateData.issuedDate);
-                alert(issuedDate);
                 const fileName = `${candidateName}_${issuedDate}`;
                 link.download = `${fileName}.png`;
 
