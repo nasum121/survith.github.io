@@ -739,8 +739,15 @@
             // Generate QR code and verification URL
 
             const sanitizedCandidateName = candidateName.trim().replace(/\s+/g, '_');
-            const sanitizedIssuedDate = formattedIssuedDate.trim().replace(/\s+/g, '_');
+            //const sanitizedIssuedDate = formattedIssuedDate.trim().replace(/\s+/g, '_');
+
+            const sanitizedIssuedDate = formattedIssuedDate
+                .replace(/,/g, '') // Remove commas first
+                .trim()
+                .replace(/\s+/g, '_');
             const base64Code = generateBase64Code(sanitizedCandidateName, sanitizedIssuedDate);
+            // alert(sanitizedCandidateName);
+            // alert(sanitizedIssuedDate);
 
             // const base64Code = generateBase64Code(candidateName, issuedDate);
             const verificationUrl = `https://netswing.in/cert/viewer.html?code=${base64Code}`;
@@ -818,9 +825,13 @@
                 // Create a download link for the image
                 const link = document.createElement('a');
                 // Use certificate number for filename if available, otherwise use base64
-
                 const candidateName = currentCertificateData.candidateName.replace(/[^a-zA-Z0-9]/g, '_');
-                const issuedDate = currentCertificateData.issuedDate.replace(/[^a-zA-Z0-9]/g, '_');
+
+                // removing the , character from the issued date from the string and then replace it with _ to match the base64 encoded string decoded match.
+                const issuedDate = currentCertificateData.issuedDate.replace(/,/g, '').replace(/ /g, '_');
+
+                alert(currentCertificateData.issuedDate);
+                alert(issuedDate);
                 const fileName = `${candidateName}_${issuedDate}`;
                 link.download = `${fileName}.png`;
 
